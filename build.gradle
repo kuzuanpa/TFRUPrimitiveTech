@@ -1,0 +1,94 @@
+buildscript {
+    repositories {
+        mavenCentral()
+        maven {
+            name = "Minecraft Forge"
+            url = "https://maven.minecraftforge.net/"
+        }
+         maven {
+            name = "sonatype"
+            url = "https://oss.sonatype.org/content/repositories/snapshots/"
+        }
+    }
+    dependencies {
+        classpath ('com.anatawa12.forge:ForgeGradle:1.2-1.1.+') {
+            changing = true
+        }
+    }
+}
+
+allprojects {
+    apply plugin: 'java'
+    apply plugin: 'forge'
+
+    version = project.version
+    group = project.group
+
+
+    minecraft {
+        version = project.minecraft_version + "-" + project.forge_version
+        runDir = "run"
+    }
+}
+
+repositories {
+    mavenCentral()
+    maven {
+        name = "forge"
+        url = "https://maven.minecraftforge.net/"
+    }
+    maven {
+        name = "gt"
+        url = "https://gregtech.mechaenetia.com/"
+    }
+    maven {
+        name = "sonatype"
+        url = "https://oss.sonatype.org/content/repositories/snapshots/"
+    }
+    maven { // the repo from which to get NEI and stuff
+        name 'CB Repo'
+        url "https://chickenbones.net/maven/"
+    }
+}
+ 
+dependencies {
+	// Forcing version numbers for everything and using NO-NEI WAILA since the "transitive dependency resolution (gradle magic)" is currently borked.
+    implementation "codechicken:CodeChickenLib:1.7.10-1.1.3.140:dev"
+    implementation "codechicken:CodeChickenCore:1.7.10-1.0.7.47:dev"
+    implementation "codechicken:NotEnoughItems:1.7.10-1.0.5.120:dev"
+    implementation "mcp.mobius.waila:Waila:1.5.11-RC2-NONEI_1.7.10"
+}
+
+//Creates a compiled de-obfuscated jar
+task deobfJar(type: Jar) {
+    from sourceSets.main.output
+    appendix = 'deobf'
+}
+
+//creates a jar containing only the src
+task sourceJar(type: Jar) {
+    from sourceSets.main.allSource
+    appendix = 'src'
+}
+
+tasks.build.dependsOn('sourceJar', 'deobfJar')
+
+dependencies {
+    // Copy "[1.7.10]TerraFirmaCraft-deobf-0.79.0.jar" file into the ./libs directory
+}
+
+processResources {
+    // This will ensure that this task is redone when the versions change.
+    inputs.property "mod_version", project.version
+    inputs.property "tfc_version", project.tfc_version
+    inputs.property "minecraft_version", project.minecraft.version
+
+    // Replace values in only mcmod.info.
+    filesMatching('mcmod.info') {
+        // Replace version and mcversion.
+        expand 'mod_version':project.version, 'tfc_version': project.tfc_version, 'minecraft_version':project.minecraft.version
+    }
+}
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
